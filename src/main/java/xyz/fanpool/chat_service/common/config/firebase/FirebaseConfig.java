@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
-import java.io.FileInputStream;
+import java.io.InputStream;
 
 @Slf4j
 @Component
@@ -30,7 +30,7 @@ public class FirebaseConfig {
 	@PostConstruct
 	public void init() {
 		try {
-			FileInputStream serviceAccount = new FileInputStream(resourceLoader.getResource(CREDENTIAL_PATH).getFile());
+			InputStream serviceAccount = resourceLoader.getResource(CREDENTIAL_PATH).getInputStream();
 
 			FirebaseOptions options = FirebaseOptions.builder()
 					.setCredentials(GoogleCredentials.fromStream(serviceAccount))
