@@ -4,5 +4,5 @@ import xyz.fanpool.chat_service.domain.ChatMessage;
 
 public interface SaveChatMessagePort {
 
-    void save(ChatMessage chatMessage);
+    void doService(ChatMessage chatMessage);
 }

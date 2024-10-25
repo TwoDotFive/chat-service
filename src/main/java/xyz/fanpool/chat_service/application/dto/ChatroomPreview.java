@@ -1,7 +1,6 @@
 package xyz.fanpool.chat_service.application.dto;
 
 import lombok.Builder;
-import xyz.fanpool.chat_service.domain.ChatMessage;
 import xyz.fanpool.chat_service.domain.ChatMessagePreview;
 
 import java.time.LocalDateTime;
@@ -17,7 +16,7 @@ public record ChatroomPreview(
         ChatMessagePreview lastMessage
 ) {
 
-    public static ChatroomPreview build(ChatroomUserInfo chatroomUserInfo, ChatMessage lastMessage, UserProfileDto partnerProfileDto) {
+    public static ChatroomPreview build(ChatroomUserInfo chatroomUserInfo, UserProfileDto partnerProfileDto) {
         return ChatroomPreview.builder()
                 .roomId(String.valueOf(chatroomUserInfo.roomId()))
                 .fanpoolId(String.valueOf(chatroomUserInfo.fanpoolId()))
@@ -25,7 +24,7 @@ public record ChatroomPreview(
                 .partner(new UserProfile(partnerProfileDto.id(), partnerProfileDto.nickname(), partnerProfileDto.image()))
                 .lastActivityTime(chatroomUserInfo.lastActivityTime())
                 .teams(chatroomUserInfo.teams())
-                .lastMessage(ChatMessagePreview.of(lastMessage))
+                .lastMessage(chatroomUserInfo.lastMessage())
                 .build();
     }
 }

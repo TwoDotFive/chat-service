@@ -10,9 +10,4 @@ public record ChatMessagePreview(String content, LocalDateTime time) {
     public static ChatMessagePreview getInitialPreview() {
         return new ChatMessagePreview("", LocalDateTime.now());
     }
-
-    public static ChatMessagePreview of(ChatMessage message) {
-        if(message == null) return null;
-        return new ChatMessagePreview(message.getContentPreview(), message.getTime());
-    }
 }

@@ -28,6 +28,6 @@ public class FindChatroomMessagesService implements FindChatroomMessagesQuery {
             throw new CustomException(HttpStatus.FORBIDDEN, "Illegal Request");
         }
 
-        return findChatMessagesPort.findChatroomMessages(command.roomId(), command.lastMessageId(), command.pageSize());
+        return findChatMessagesPort.doService(command.roomId(), command.lastMessageId(), command.pageSize());
     }
 }

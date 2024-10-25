@@ -1,21 +1,23 @@
 package xyz.fanpool.chat_service.adapter.out.persistence;
 
-import jakarta.persistence.*;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.domain.Persistable;
+import org.springframework.data.mongodb.core.mapping.Document;
 import xyz.fanpool.chat_service.domain.ChatMessage;
 import xyz.fanpool.chat_service.domain.ChatMessageType;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Entity
-@Table(name = "chat_message")
+@Document(collection = "chat_message")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatMessageJpaEntity implements Persistable<Long> {
+public class ChatMessageMongoEntity implements Persistable<Long> {
 
     @Id
     private Long id;
@@ -43,8 +45,8 @@ public class ChatMessageJpaEntity implements Persistable<Long> {
                 .build();
     }
 
-    public static ChatMessageJpaEntity of(ChatMessage chatMessage) {
-        ChatMessageJpaEntity mongoEntity = new ChatMessageJpaEntity();
+    public static ChatMessageMongoEntity of(ChatMessage chatMessage) {
+        ChatMessageMongoEntity mongoEntity = new ChatMessageMongoEntity();
         mongoEntity.id = chatMessage.getId();
         mongoEntity.roomId = chatMessage.getRoomId();
         mongoEntity.userId = chatMessage.getUserId();

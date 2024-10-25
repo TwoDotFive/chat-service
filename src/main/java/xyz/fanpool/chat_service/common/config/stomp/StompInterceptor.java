@@ -11,10 +11,10 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import xyz.fanpool.chat_service.application.dto.ChatroomUsersInfo;
 import xyz.fanpool.chat_service.application.dto.UserProfileDto;
+import xyz.fanpool.chat_service.adapter.out.client.UserServiceClient;
+import xyz.fanpool.chat_service.application.dto.ChatroomUsersInfo;
 import xyz.fanpool.chat_service.application.port.in.*;
-import xyz.fanpool.chat_service.application.port.out.FindUserProfilePort;
 import xyz.fanpool.chat_service.common.util.JwtUtil;
 
 import java.util.Map;
@@ -27,12 +27,14 @@ import java.util.Objects;
 public class StompInterceptor implements ChannelInterceptor {
 
     private final JwtUtil jwtUtil;
+    private final UserServiceClient userServiceClient;
     private final FindChatroomUsersQuery findChatroomUsersQuery;
     private final UpdateChatroomUserConnectionStatusUseCase updateChatroomUserConnectionStatusUseCase;
     private final SubscribeChatroomTopicUseCase subscribeChatroomTopicUseCase;
+    private final SubscribeChatroomListTopicUseCase subscribeChatroomListTopicUseCase;
     private final UpdateChatroomUserLastActivityTimeUseCase updateChatroomUserLastActivityTimeUseCase;
-
-    private final FindUserProfilePort findUserProfilePort;
+    private final UnsubscribeChatroomTopicUseCase unsubscribeChatroomTopicUseCase;
+    private final UnsubscribeChatroomListTopicUseCase unsubscribeChatroomListTopicUseCase;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -46,7 +48,7 @@ public class StompInterceptor implements ChannelInterceptor {
             case CONNECT -> connect(accessor);
             case SUBSCRIBE -> subscribe(accessor);
             case SEND -> send(accessor);
-            case DISCONNECT -> disconnect(accessor);
+            case UNSUBSCRIBE, DISCONNECT -> disconnect(accessor);
         }
 
         return message;
@@ -56,7 +58,7 @@ public class StompInterceptor implements ChannelInterceptor {
     private void connect(StompHeaderAccessor accessor) {
         long userId = extractUserIdFromJwt(accessor);
 
-        UserProfileDto userProfileDto = findUserProfilePort.doService(userId);
+        UserProfileDto userProfileDto = userServiceClient.findProfile(userId);
 
         addSessionAttribute(accessor, "userId", Long.valueOf(userProfileDto.id()));
         addSessionAttribute(accessor, "userNickname", userProfileDto.nickname());
@@ -70,6 +72,7 @@ public class StompInterceptor implements ChannelInterceptor {
         if (destination.startsWith("/chat/sub")) {
 
             long roomId = parseDestinationId(accessor, "/chat/sub");
+
             ChatroomUsersInfo chatroomUsersInfo;
 
             try {
@@ -100,27 +103,51 @@ public class StompInterceptor implements ChannelInterceptor {
             // Redis Channel 구독 처리
             subscribeChatroomTopicUseCase.doService(userId, roomId);
         }
+
+        // 회원 채팅방 목록 구독 시
+        else if (destination.startsWith("/chatroom/sub")) {
+
+            // 인가 처리
+            Long destinationId = parseDestinationId(accessor, "/chatroom/sub");
+            if (!destinationId.equals(userId)) {
+                throw new RuntimeException("Unauthorized Subscription Request");
+            }
+
+            // 세션 속성 설정 : 구독 타입
+            addSessionAttribute(accessor, "subscribe_type", "chatroom_list");
+
+            // Redis Channel 구독 처리
+            subscribeChatroomListTopicUseCase.doService(userId);
+        }
     }
 
     private void disconnect(StompHeaderAccessor accessor) {
 
         Long userId = (Long) getSessionAttribute(accessor, "userId");
-        Long roomId = (Long) getSessionAttribute(accessor, "roomId");
         String subscribeType = (String) getSessionAttribute(accessor, "subscribe_type");
-
-        log.info("DISCONNECTED - user: {} / room: {}", userId, roomId);
 
         if (subscribeType == null) return;
 
         // 채팅방 구독 해지 시
         if (subscribeType.equals("chatroom")) {
 
+            Long roomId = (Long) getSessionAttribute(accessor, "roomId");
 
             // 채팅방 퇴장 시간 기록
             updateChatroomUserLastActivityTimeUseCase.doService(userId, roomId);
 
             // 회원 채팅방 접속 상태 설정 : OFF
             updateChatroomUserConnectionStatusUseCase.doService(userId, roomId, false);
+
+            // Redis Channel 구독 해지 처리
+            unsubscribeChatroomTopicUseCase.doService(userId, roomId);
+        }
+
+        // 회원 채팅방 목록 구독 해지 시
+        else if (subscribeType.equals("chatroom_list")) {
+
+            // Redis Channel 구독 해지 처리
+            unsubscribeChatroomListTopicUseCase.doService(userId);
         }
     }
 

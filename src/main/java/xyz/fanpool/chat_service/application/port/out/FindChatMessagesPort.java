@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface FindChatMessagesPort {
 
-    List<ChatMessage> findChatroomMessages(long roomId, long lastChatMessageId, int pageSize);
+    List<ChatMessage> doService(long roomId, long lastChatMessageId, int pageSize);
 }
