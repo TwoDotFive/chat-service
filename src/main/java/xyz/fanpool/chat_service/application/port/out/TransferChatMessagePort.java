@@ -2,7 +2,7 @@ package xyz.fanpool.chat_service.application.port.out;
 
 import xyz.fanpool.chat_service.application.dto.StompChatMessage;
 
-public interface PublishChatMessagePort {
+public interface TransferChatMessagePort {
 
-    void doService(StompChatMessage message);
+    boolean doService(StompChatMessage message, String targetServerIpAddress);
 }

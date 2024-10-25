@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: chat-service
+  profiles:
+    active: local
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+    import: secret/application-local.yml
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: secret/application-docker.yml
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+    import: secret/application-prod.yml

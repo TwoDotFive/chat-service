@@ -1,4 +1,4 @@
-package xyz.fanpool.chat_service.adapter.in;
+package xyz.fanpool.chat_service.adapter.in.rest;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active: test
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+    import: secret/application-test.yml
